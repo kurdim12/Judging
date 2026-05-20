@@ -15,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "judging",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "604c5a2a-d49e-47e8-951c-55995ba1ad49",
       "migrations_dir": "db/migrations"
     }
   ],
