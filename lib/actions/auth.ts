@@ -41,7 +41,13 @@ export async function requestMagicLink(input: z.infer<typeof requestSchema>) {
   const url = `${siteUrl}/${parsed.data.locale}/auth/verify?token=${token}`;
 
   try {
-    await sendMagicLinkEmail({ to: parsed.data.email, locale: parsed.data.locale, url });
+    const result = await sendMagicLinkEmail({
+      to: parsed.data.email,
+      locale: parsed.data.locale,
+      url,
+    });
+    // When Resend isn't configured, surface the link so the user can complete sign-in.
+    if (result.dev && result.url) return { ok: true, devUrl: result.url };
   } catch (err) {
     return { ok: false, error: (err as Error).message };
   }

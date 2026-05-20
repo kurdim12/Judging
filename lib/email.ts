@@ -7,7 +7,17 @@ interface MagicLinkEmail {
   url: string;
 }
 
-export async function sendMagicLinkEmail({ to, locale, url }: MagicLinkEmail) {
+export interface SendMagicLinkResult {
+  ok: true;
+  dev?: true;
+  url?: string;
+}
+
+export async function sendMagicLinkEmail({
+  to,
+  locale,
+  url,
+}: MagicLinkEmail): Promise<SendMagicLinkResult> {
   const env = await getEnv();
   const apiKey = env.RESEND_API_KEY;
   const from = env.EMAIL_FROM ?? "IEEE UoP Hackathon <onboarding@resend.dev>";
@@ -36,9 +46,9 @@ export async function sendMagicLinkEmail({ to, locale, url }: MagicLinkEmail) {
   `;
 
   if (!apiKey) {
-    // Dev fallback: log the link so the developer can copy-paste it.
+    // No Resend configured — return the URL so the action can show it inline.
     console.warn("[email] RESEND_API_KEY missing — magic link:", url);
-    return { ok: true, dev: true };
+    return { ok: true, dev: true, url };
   }
 
   const res = await fetch("https://api.resend.com/emails", {
