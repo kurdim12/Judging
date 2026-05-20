@@ -1,0 +1,161 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "team": "فريقي",
+    "submission": "المشروع",
+    "judge": "التحكيم",
+    "leaderboard": "النتائج",
+    "admin": "الإدارة",
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "signup": "إنشاء حساب",
+    "language": "English"
+  },
+  "brand": {
+    "title": "هاكاثون IEEE جامعة البتراء",
+    "tagline": "فرع طلاب جامعة البتراء"
+  },
+  "auth": {
+    "signIn": "سجّل الدخول للمتابعة",
+    "signUp": "أنشئ حسابك",
+    "email": "البريد الإلكتروني",
+    "fullName": "الاسم الكامل",
+    "sendMagicLink": "أرسل رابط الدخول",
+    "magicLinkSent": "تحقّق من بريدك الإلكتروني لرابط الدخول.",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "needAccount": "ليس لديك حساب؟",
+    "continueAsGuest": "تصفّح كزائر"
+  },
+  "event": {
+    "phase": {
+      "setup": "الإعداد",
+      "submissions_open": "استقبال المشاريع مفتوح",
+      "submissions_closed": "أُغلق الاستقبال",
+      "judging": "التحكيم جارٍ",
+      "results_published": "النتائج معلنة"
+    },
+    "deadlineSubmission": "موعد تسليم المشاريع",
+    "deadlineJudging": "موعد انتهاء التحكيم",
+    "anonymousJudging": "تحكيم مجهول الهوية",
+    "publicLeaderboard": "لوحة النتائج العامة"
+  },
+  "team": {
+    "createTitle": "أنشئ فريقك",
+    "myTeam": "فريقي",
+    "noTeam": "لا يوجد لديك فريق بعد.",
+    "createTeam": "أنشئ الفريق",
+    "teamName": "اسم الفريق",
+    "displayCode": "رمز العرض",
+    "leader": "القائد",
+    "members": "الأعضاء",
+    "inviteByEmail": "ادعُ عضواً بالبريد",
+    "invite": "دعوة",
+    "remove": "إزالة",
+    "inviteSuccess": "تمّت إضافة العضو.",
+    "inviteNotFound": "لا يوجد مستخدم مسجّل بهذا البريد — اطلب منه التسجيل أولاً.",
+    "alreadyMember": "هذا المستخدم عضو في الفريق بالفعل."
+  },
+  "submission": {
+    "title": "المشروع",
+    "projectTitle": "عنوان المشروع",
+    "description": "الوصف",
+    "problemStatement": "بيان المشكلة",
+    "solutionSummary": "ملخّص الحل",
+    "techStack": "التقنيات المستخدمة",
+    "techStackHint": "اضغط Enter للإضافة",
+    "githubUrl": "رابط مستودع GitHub",
+    "demoUrl": "رابط النسخة التجريبية",
+    "videoUrl": "رابط فيديو العرض",
+    "slidesUrl": "رابط الشرائح",
+    "attachments": "الملفات المرفقة",
+    "uploadHint": "اسحب وأفلت أو انقر للرفع (حد أقصى 5 ملفات بحجم 50 ميغابايت لكل ملف)",
+    "saveDraft": "حفظ كمسودة",
+    "submitFinal": "تسليم نهائي",
+    "submitted": "مُسلَّم",
+    "draft": "مسودة",
+    "lockedAfterDeadline": "التعديل مُعطّل لانتهاء فترة التسليم.",
+    "lastSaved": "آخر حفظ {when}",
+    "confirmSubmit": "بعد التسليم لن تتمكن من التعديل. هل أنت متأكد؟"
+  },
+  "judge": {
+    "queue": "قائمة التحكيم",
+    "noTeams": "لا توجد فرق للتحكيم بعد.",
+    "scoreNow": "قيّم الآن",
+    "conflictFlag": "أعلن تعارض مصالح",
+    "conflictReasonPlaceholder": "السبب (اختياري — يبقى خاصاً)",
+    "conflictConfirm": "تأكيد التعارض",
+    "anonymousNotice": "وضع التحكيم المجهول مفعّل — هوية الفرق مخفية.",
+    "status": {
+      "notStarted": "لم يبدأ",
+      "inProgress": "قيد التقييم",
+      "complete": "مكتمل"
+    }
+  },
+  "scoring": {
+    "scoreNow": "قيّم الآن",
+    "saved": "تم الحفظ",
+    "saving": "جارٍ الحفظ…",
+    "markComplete": "إنهاء التحكيم",
+    "conflictFlag": "أعلن تعارض المصالح",
+    "anonymousNotice": "وضع التحكيم المجهول مفعّل",
+    "comment": "تعليق (اختياري)",
+    "criterionScore": "الدرجة",
+    "back": "العودة إلى القائمة",
+    "submissionLocked": "تمّ تثبيت هذا المشروع.",
+    "allScoredHint": "قيّم جميع المعايير لإنهاء التحكيم."
+  },
+  "leaderboard": {
+    "title": "لوحة النتائج",
+    "rank": "الترتيب",
+    "team": "الفريق",
+    "finalScore": "النتيجة النهائية",
+    "judgesScored": "عدد المحكّمين",
+    "pending": "النتائج قيد الإعداد — يرجى التحقق لاحقاً.",
+    "publicDisabled": "لوحة النتائج العامة معطّلة لهذا الحدث.",
+    "normalizationNote": "تُطبَّع الدرجات إحصائياً لكل محكّم للحدّ من التحيّز.",
+    "raw": "الدرجات الخام",
+    "variance": "تباين الدرجات"
+  },
+  "admin": {
+    "title": "لوحة الإدارة",
+    "events": "الفعاليات",
+    "criteria": "المعايير",
+    "users": "المستخدمون",
+    "teams": "الفرق",
+    "leaderboard": "النتائج",
+    "createEvent": "إنشاء فعالية",
+    "createCriterion": "إضافة معيار",
+    "weight": "الوزن",
+    "maxScore": "العلامة القصوى",
+    "displayOrder": "الترتيب",
+    "role": "الدور",
+    "promote": "تغيير الدور",
+    "newRole": "الدور الجديد",
+    "saved": "تم الحفظ",
+    "phase": "المرحلة"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "loading": "جارٍ التحميل…",
+    "back": "رجوع",
+    "yes": "نعم",
+    "no": "لا",
+    "required": "مطلوب",
+    "optional": "اختياري",
+    "of": "من",
+    "submit": "إرسال",
+    "saveChanges": "حفظ التغييرات",
+    "open": "فتح",
+    "close": "إغلاق"
+  },
+  "errors": {
+    "generic": "حدث خطأ. الرجاء المحاولة مرة أخرى.",
+    "notAuthenticated": "الرجاء تسجيل الدخول للمتابعة.",
+    "forbidden": "ليس لديك صلاحية لذلك.",
+    "validation": "الرجاء مراجعة النموذج لتصحيح الأخطاء.",
+    "uploadFailed": "فشل الرفع — حاول بملف أصغر."
+  }
+}

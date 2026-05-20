@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  /* IEEE Blue */
+  --color-ieee-50: #E6F0F8;
+  --color-ieee-100: #C2D9EC;
+  --color-ieee-200: #99BFDD;
+  --color-ieee-300: #67A1CB;
+  --color-ieee-400: #3786BD;
+  --color-ieee-500: #035B98;
+  --color-ieee-600: #024C80;
+  --color-ieee-700: #023A62;
+  --color-ieee-800: #012947;
+  --color-ieee-900: #01182B;
+
+  /* Petra Red */
+  --color-petra-50: #F7ECEB;
+  --color-petra-100: #E8C8C7;
+  --color-petra-200: #D5A2A1;
+  --color-petra-300: #BC7B7A;
+  --color-petra-400: #A05A59;
+  --color-petra-500: #873B3A;
+  --color-petra-600: #6F2F2E;
+  --color-petra-700: #562423;
+  --color-petra-800: #3D1A19;
+  --color-petra-900: #261110;
+
+  /* Neutrals */
+  --color-stone-50: #FAFAFA;
+  --color-stone-100: #F1F1F0;
+  --color-stone-200: #E3E3E1;
+  --color-stone-300: #C9C9C5;
+  --color-stone-400: #A5A5A0;
+  --color-stone-500: #7C7C77;
+  --color-stone-600: #5C5C58;
+  --color-stone-700: #424240;
+  --color-stone-800: #2C2C2A;
+  --color-stone-900: #161615;
+
+  /* Semantic aliases */
+  --color-primary: var(--color-ieee-500);
+  --color-primary-hover: var(--color-ieee-600);
+  --color-secondary: var(--color-petra-500);
+  --color-background: var(--color-stone-50);
+  --color-surface: #FFFFFF;
+  --color-border: var(--color-stone-200);
+  --color-text: var(--color-stone-800);
+  --color-text-muted: var(--color-stone-500);
+
+  --color-success: #15803D;
+  --color-warning: #B45309;
+  --color-danger: #B91C1C;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Kufi Arabic", "Noto Sans Arabic", sans-serif;
+}
+
+:root {
+  --radius: 0.625rem;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  min-height: 100%;
+}
+
+[dir="rtl"] body {
+  font-family: "Noto Kufi Arabic", "Noto Sans Arabic", var(--font-sans);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::selection {
+  background: var(--color-ieee-100);
+  color: var(--color-ieee-900);
+}
+
+/* RTL helpers */
+[dir="rtl"] .rtl\:flip {
+  transform: scaleX(-1);
+}
+
+/* Focus ring */
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--color-ieee-500);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}

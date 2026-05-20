@@ -1,0 +1,161 @@
+{
+  "nav": {
+    "home": "Home",
+    "team": "My Team",
+    "submission": "Submission",
+    "judge": "Judging",
+    "leaderboard": "Leaderboard",
+    "admin": "Admin",
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "signup": "Sign Up",
+    "language": "العربية"
+  },
+  "brand": {
+    "title": "IEEE UoP Hackathon",
+    "tagline": "University of Petra Student Branch"
+  },
+  "auth": {
+    "signIn": "Sign in to continue",
+    "signUp": "Create your account",
+    "email": "Email address",
+    "fullName": "Full name",
+    "sendMagicLink": "Send magic link",
+    "magicLinkSent": "Check your email for the sign-in link.",
+    "alreadyHaveAccount": "Already have an account?",
+    "needAccount": "Need an account?",
+    "continueAsGuest": "Continue browsing as guest"
+  },
+  "event": {
+    "phase": {
+      "setup": "Setup",
+      "submissions_open": "Submissions open",
+      "submissions_closed": "Submissions closed",
+      "judging": "Judging in progress",
+      "results_published": "Results published"
+    },
+    "deadlineSubmission": "Submission deadline",
+    "deadlineJudging": "Judging deadline",
+    "anonymousJudging": "Anonymous judging",
+    "publicLeaderboard": "Public leaderboard"
+  },
+  "team": {
+    "createTitle": "Create your team",
+    "myTeam": "My team",
+    "noTeam": "You don't have a team yet.",
+    "createTeam": "Create team",
+    "teamName": "Team name",
+    "displayCode": "Display code",
+    "leader": "Leader",
+    "members": "Members",
+    "inviteByEmail": "Invite by email",
+    "invite": "Invite",
+    "remove": "Remove",
+    "inviteSuccess": "Member added.",
+    "inviteNotFound": "No registered user with that email — ask them to sign up first.",
+    "alreadyMember": "That user is already on this team."
+  },
+  "submission": {
+    "title": "Submission",
+    "projectTitle": "Project title",
+    "description": "Description",
+    "problemStatement": "Problem statement",
+    "solutionSummary": "Solution summary",
+    "techStack": "Tech stack",
+    "techStackHint": "Press Enter to add",
+    "githubUrl": "GitHub repository URL",
+    "demoUrl": "Live demo URL",
+    "videoUrl": "Pitch video URL",
+    "slidesUrl": "Slides URL",
+    "attachments": "Attachments",
+    "uploadHint": "Drag and drop or click to upload (max 5 files, 50 MB each)",
+    "saveDraft": "Save draft",
+    "submitFinal": "Submit final",
+    "submitted": "Submitted",
+    "draft": "Draft",
+    "lockedAfterDeadline": "Editing is locked because submissions are closed.",
+    "lastSaved": "Last saved {when}",
+    "confirmSubmit": "Once submitted, you cannot edit. Are you sure?"
+  },
+  "judge": {
+    "queue": "Your judging queue",
+    "noTeams": "No teams to judge yet.",
+    "scoreNow": "Score now",
+    "conflictFlag": "Flag conflict of interest",
+    "conflictReasonPlaceholder": "Optional reason (kept private)",
+    "conflictConfirm": "Flag conflict",
+    "anonymousNotice": "Anonymous judging is enabled — team identities are hidden.",
+    "status": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "complete": "Complete"
+    }
+  },
+  "scoring": {
+    "scoreNow": "Score now",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "markComplete": "Mark complete",
+    "conflictFlag": "Flag conflict of interest",
+    "anonymousNotice": "Anonymous judging mode is enabled",
+    "comment": "Comment (optional)",
+    "criterionScore": "Score",
+    "back": "Back to queue",
+    "submissionLocked": "This submission has been finalized.",
+    "allScoredHint": "Score every criterion to mark complete."
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "rank": "Rank",
+    "team": "Team",
+    "finalScore": "Final score",
+    "judgesScored": "Judges scored",
+    "pending": "Results pending — check back once judging is complete.",
+    "publicDisabled": "Public leaderboard is disabled for this event.",
+    "normalizationNote": "Scores are z-score normalized per judge to reduce bias.",
+    "raw": "Raw scores",
+    "variance": "Score variance"
+  },
+  "admin": {
+    "title": "Admin",
+    "events": "Events",
+    "criteria": "Criteria",
+    "users": "Users",
+    "teams": "Teams",
+    "leaderboard": "Leaderboard",
+    "createEvent": "Create event",
+    "createCriterion": "Add criterion",
+    "weight": "Weight",
+    "maxScore": "Max score",
+    "displayOrder": "Order",
+    "role": "Role",
+    "promote": "Change role",
+    "newRole": "New role",
+    "saved": "Saved",
+    "phase": "Phase"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading…",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required",
+    "optional": "Optional",
+    "of": "of",
+    "submit": "Submit",
+    "saveChanges": "Save changes",
+    "open": "Open",
+    "close": "Close"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notAuthenticated": "Please sign in to continue.",
+    "forbidden": "You don't have permission to do that.",
+    "validation": "Please check the form for errors.",
+    "uploadFailed": "Upload failed — please try a smaller file."
+  }
+}
