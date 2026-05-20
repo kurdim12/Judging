@@ -163,3 +163,51 @@ export async function bootstrapAdminEmail(): Promise<string | null> {
   const env = await getEnv();
   return env.BOOTSTRAP_ADMIN_EMAIL ?? null;
 }
+
+// ----- Password hashing (PBKDF2-SHA256) -----
+
+const PBKDF2_ITERS = 100_000;
+
+export async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"],
+  );
+  const derived = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: salt as BufferSource, iterations: PBKDF2_ITERS, hash: "SHA-256" },
+    key,
+    256,
+  );
+  return `pbkdf2$${PBKDF2_ITERS}$${b64urlEncode(salt)}$${b64urlEncode(new Uint8Array(derived))}`;
+}
+
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  const parts = stored.split("$");
+  if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+  const iters = parseInt(parts[1], 10);
+  const salt = b64urlDecode(parts[2]);
+  const expected = b64urlDecode(parts[3]);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"],
+  );
+  const actual = new Uint8Array(
+    await crypto.subtle.deriveBits(
+      { name: "PBKDF2", salt: salt as BufferSource, iterations: iters, hash: "SHA-256" },
+      key,
+      expected.length * 8,
+    ),
+  );
+  if (actual.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
+  return diff === 0;
+}

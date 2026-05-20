@@ -1,91 +1,40 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { requestMagicLink } from "@/lib/actions/auth";
-import type { Locale } from "@/i18n";
+import { signInWithPasswordAction } from "@/lib/actions/auth";
 
 export function LoginForm({
   locale,
-  mode,
 }: {
   locale: string;
-  mode: "signin" | "signup";
 }) {
   const t = useTranslations("auth");
   const tErr = useTranslations("errors");
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
   const [pending, start] = useTransition();
-  const [sent, setSent] = useState(false);
-  const [devUrl, setDevUrl] = useState<string | null>(null);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     start(async () => {
-      const result = await requestMagicLink({
-        email,
-        full_name: mode === "signup" ? fullName : undefined,
-        locale: locale === "ar" ? "ar" : "en",
-      });
+      const result = await signInWithPasswordAction({ email, password });
       if (!result.ok) {
         toast.error(result.error ?? tErr("generic"));
         return;
       }
-      if ("devUrl" in result && typeof result.devUrl === "string") {
-        setDevUrl(result.devUrl);
-      }
-      setSent(true);
+      router.push(`/${locale}`);
+      router.refresh();
     });
-  }
-
-  if (sent) {
-    return (
-      <div className="space-y-3">
-        <div className="rounded-md border border-ieee-100 bg-ieee-50 p-4 text-sm text-ieee-800">
-          {t("magicLinkSent")}
-        </div>
-        {devUrl && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-            <p className="font-semibold mb-1">
-              {locale === "ar"
-                ? "وضع التطوير — البريد غير مفعّل"
-                : "Dev mode — email not configured"}
-            </p>
-            <p className="mb-2">
-              {locale === "ar"
-                ? "افتح هذا الرابط لإكمال تسجيل الدخول:"
-                : "Open this link to complete sign-in:"}
-            </p>
-            <a
-              href={devUrl}
-              className="block break-all rounded bg-white px-2 py-1 font-mono text-[11px] text-ieee-700 hover:underline"
-            >
-              {devUrl}
-            </a>
-          </div>
-        )}
-      </div>
-    );
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {mode === "signup" && (
-        <div>
-          <Label htmlFor="fullName">{t("fullName")}</Label>
-          <Input
-            id="fullName"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="mt-1.5"
-            required
-          />
-        </div>
-      )}
       <div>
         <Label htmlFor="email">{t("email")}</Label>
         <Input
@@ -98,9 +47,32 @@ export function LoginForm({
           autoComplete="email"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={pending || !email}>
-        {pending ? "…" : t("sendMagicLink")}
+      <div>
+        <Label htmlFor="password">
+          {locale === "ar" ? "كلمة المرور" : "Password"}
+        </Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mt-1.5"
+          required
+          autoComplete="current-password"
+        />
+      </div>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={pending || !email || !password}
+      >
+        {pending ? "…" : locale === "ar" ? "تسجيل الدخول" : "Sign in"}
       </Button>
+      <p className="text-[11px] text-stone-500 text-center">
+        {locale === "ar"
+          ? "الحسابات يُنشئها المنظّمون مسبقاً."
+          : "Accounts are issued in advance by the organizers."}
+      </p>
     </form>
   );
 }
