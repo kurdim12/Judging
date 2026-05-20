@@ -30,6 +30,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts.bak
 
-# supabase
-supabase/.branches
-supabase/.temp
+# cloudflare
+.open-next/
+.wrangler/
+worker-configuration.d.ts

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getDB } from "@/lib/db";
+import { getTeamForUser, listTeamMembers } from "@/lib/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,39 +13,15 @@ import type { Locale } from "@/i18n";
 export default async function TeamPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const user = await requireUser();
   const t = await getTranslations("team");
-  const supabase = await createClient();
 
-  // Find a team where user is leader or member.
-  const { data: leadTeams } = await supabase
-    .from("teams")
-    .select("*, events(name_en, name_ar, phase)")
-    .eq("leader_id", user.id);
-
-  const { data: memberRows } = await supabase
-    .from("team_members")
-    .select("team_id")
-    .eq("profile_id", user.id);
-
-  const memberTeamIds = (memberRows ?? []).map((r) => r.team_id);
-  const { data: memberTeams } = memberTeamIds.length
-    ? await supabase
-        .from("teams")
-        .select("*, events(name_en, name_ar, phase)")
-        .in("id", memberTeamIds)
-    : { data: [] };
-
-  const allTeams = [...(leadTeams ?? []), ...(memberTeams ?? [])];
-  const uniqueById = new Map<string, (typeof allTeams)[number]>();
-  for (const team of allTeams) uniqueById.set(team.id, team);
-  const teams = Array.from(uniqueById.values());
-
-  if (teams.length === 0) {
-    if (user.profile.role !== "team_leader" && user.profile.role !== "admin") {
+  const team = await getTeamForUser(user.id);
+  if (!team) {
+    if (user.role !== "team_leader" && user.role !== "admin") {
       return (
         <Card>
           <CardHeader>
@@ -61,26 +38,18 @@ export default async function TeamPage({
     redirect(`/${locale}/team/create`);
   }
 
-  // Load members for the first team.
-  const team = teams[0];
-  const { data: rawMembers } = await supabase
-    .from("team_members")
-    .select("profile_id, joined_at, profiles(id, email, full_name_en, full_name_ar, role)")
-    .eq("team_id", team.id);
+  const db = await getDB();
+  const event = await db
+    .prepare("SELECT name_en, name_ar, phase, max_team_size FROM events WHERE id = ?")
+    .bind(team.event_id)
+    .first<{
+      name_en: string;
+      name_ar: string;
+      phase: string;
+      max_team_size: number | null;
+    }>();
 
-  type MemberRow = {
-    profile_id: string;
-    joined_at: string;
-    profiles: {
-      id: string;
-      email: string;
-      full_name_en: string | null;
-      full_name_ar: string | null;
-      role: string;
-    } | null;
-  };
-  const members = (rawMembers ?? []) as unknown as MemberRow[];
-
+  const members = await listTeamMembers(team.id);
   const isLeader = team.leader_id === user.id;
 
   return (
@@ -90,13 +59,15 @@ export default async function TeamPage({
           <p className="text-xs uppercase tracking-wide text-stone-500">{t("myTeam")}</p>
           <h1 className="mt-1 text-2xl font-bold text-stone-900">{team.name}</h1>
           <p className="mt-1 text-sm text-stone-500">
-            {locale === "ar" ? team.events?.name_ar : team.events?.name_en}
+            {locale === "ar" ? event?.name_ar : event?.name_en}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="primary">{team.display_code}</Badge>
           <Link href={`/${locale}/submission`}>
-            <Button>{t("inviteByEmail") /* placeholder unused */}</Button>
+            <Button>
+              {locale === "ar" ? "تحرير المشروع" : "Edit submission"}
+            </Button>
           </Link>
         </div>
       </div>
@@ -107,8 +78,8 @@ export default async function TeamPage({
             <CardTitle>{t("members")}</CardTitle>
             <CardDescription>
               {locale === "ar"
-                ? `الحد الأقصى ${team.events?.name_en ? "5" : ""} أعضاء`
-                : "Add team members by their registered email."}
+                ? `الحد الأقصى ${event?.max_team_size ?? 5} أعضاء`
+                : `Up to ${event?.max_team_size ?? 5} members`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -118,12 +89,9 @@ export default async function TeamPage({
               currentUserId={user.id}
               isLeader={isLeader}
               members={members.map((m) => ({
-                profile_id: m.profile_id,
-                email: m.profiles?.email ?? "—",
-                name:
-                  locale === "ar"
-                    ? m.profiles?.full_name_ar ?? m.profiles?.full_name_en
-                    : m.profiles?.full_name_en,
+                profile_id: m.user_id,
+                email: m.email,
+                name: locale === "ar" ? m.full_name_ar ?? m.full_name_en : m.full_name_en,
               }))}
               locale={locale}
             />

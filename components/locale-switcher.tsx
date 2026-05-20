@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { locales, type Locale } from "@/i18n";
 
-export function LocaleSwitcher({ current }: { current: Locale }) {
+export function LocaleSwitcher({ current }: { current: string }) {
   const pathname = usePathname() ?? "/";
   const t = useTranslations("nav");
 
-  const next = locales.find((l) => l !== current) ?? current;
+  const next = locales.find((l) => l !== current) ?? (current as (typeof locales)[number]);
   const stripped = pathname.replace(new RegExp(`^/${current}`), "") || "/";
   const href = `/${next}${stripped === "/" ? "" : stripped}`;
 

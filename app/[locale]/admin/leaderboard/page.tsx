@@ -1,5 +1,12 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
+import { getDB } from "@/lib/db";
+import {
+  computeLeaderboard,
+  listCriteriaForEvent,
+  listEvents,
+  listScoresForEvent,
+} from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LiveLeaderboard } from "@/components/live-leaderboard";
 import type { Locale } from "@/i18n";
@@ -7,18 +14,14 @@ import type { Locale } from "@/i18n";
 export default async function AdminLeaderboardPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
+  await requireRole("admin");
   const { locale } = await params;
   const t = await getTranslations("leaderboard");
-  const supabase = await createClient();
 
-  const { data: events } = await supabase
-    .from("events")
-    .select("*")
-    .order("created_at", { ascending: false });
-  const event = events?.[0];
-
+  const events = await listEvents();
+  const event = events[0];
   if (!event) {
     return (
       <Card>
@@ -29,25 +32,14 @@ export default async function AdminLeaderboardPage({
     );
   }
 
-  const [{ data: rows }, { data: criteria }, { data: scores }, { data: judges }] =
-    await Promise.all([
-      supabase.from("leaderboard").select("*").eq("event_id", event.id),
-      supabase
-        .from("criteria")
-        .select("*")
-        .eq("event_id", event.id)
-        .order("display_order"),
-      supabase
-        .from("scores")
-        .select("*, profiles!scores_judge_id_fkey(full_name_en, full_name_ar, email)")
-        .in(
-          "team_id",
-          (await supabase.from("teams").select("id").eq("event_id", event.id)).data?.map(
-            (t) => t.id,
-          ) ?? [],
-        ),
-      supabase.from("profiles").select("id, full_name_en, full_name_ar, email").eq("role", "judge"),
-    ]);
+  const [rows, criteria, scores, judgesRes] = await Promise.all([
+    computeLeaderboard(event.id),
+    listCriteriaForEvent(event.id),
+    listScoresForEvent(event.id),
+    (await getDB())
+      .prepare("SELECT id, full_name_en, full_name_ar, email FROM users WHERE role = 'judge'")
+      .all<{ id: string; full_name_en: string | null; full_name_ar: string | null; email: string }>(),
+  ]);
 
   return (
     <div className="space-y-5">
@@ -59,12 +51,12 @@ export default async function AdminLeaderboardPage({
         <CardContent className="pt-5">
           <LiveLeaderboard
             eventId={event.id}
-            initial={rows ?? []}
-            anonymous={event.anonymous_judging}
+            initial={rows}
+            anonymous={!!event.anonymous_judging}
             locale={locale}
-            criteria={criteria ?? []}
-            scores={(scores ?? []) as never}
-            judges={(judges ?? []) as never}
+            criteria={criteria}
+            scores={scores}
+            judges={judgesRes.results ?? []}
             labels={{
               rank: t("rank"),
               team: t("team"),

@@ -20,7 +20,7 @@ const phases: EventPhase[] = [
   "results_published",
 ];
 
-export function EventsManager({ events, locale }: { events: Event[]; locale: Locale }) {
+export function EventsManager({ events, locale }: { events: Event[]; locale: string }) {
   const tAdmin = useTranslations("admin");
   const tEvent = useTranslations("event");
   const tErr = useTranslations("errors");
@@ -165,7 +165,7 @@ export function EventsManager({ events, locale }: { events: Event[]; locale: Loc
               <label className="mt-5 flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
-                  defaultChecked={ev.anonymous_judging}
+                  defaultChecked={!!ev.anonymous_judging}
                   onChange={(e) =>
                     start(async () => {
                       const r = await updateEventAction(ev.id, {
@@ -181,7 +181,7 @@ export function EventsManager({ events, locale }: { events: Event[]; locale: Loc
               <label className="mt-5 flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
-                  defaultChecked={ev.show_public_leaderboard}
+                  defaultChecked={!!ev.show_public_leaderboard}
                   onChange={(e) =>
                     start(async () => {
                       const r = await updateEventAction(ev.id, {

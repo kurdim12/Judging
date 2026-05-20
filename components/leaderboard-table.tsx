@@ -24,7 +24,7 @@ export function LeaderboardTable({
 }: {
   rows: LeaderboardRow[];
   anonymous: boolean;
-  locale: Locale;
+  locale: string;
   labels: { rank: string; team: string; finalScore: string; judgesScored: string };
 }) {
   const sorted = [...rows].sort((a, b) => b.final_score - a.final_score);

@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getDB, newId } from "@/lib/db";
 import { requireUser, requireRole } from "@/lib/auth";
 import { teamCreateSchema, teamInviteSchema } from "@/lib/validators";
-import { nextDisplayCode } from "@/lib/utils";
+import { findUserByEmail, nextDisplayCodeForEvent } from "@/lib/queries";
 
 export interface ActionResult {
   ok: boolean;
@@ -20,33 +20,29 @@ export async function createTeamAction(formData: FormData): Promise<ActionResult
   });
   if (!parsed.success) return { ok: false, error: "Invalid team data" };
 
-  const supabase = await createClient();
+  const db = await getDB();
+  const code = await nextDisplayCodeForEvent(parsed.data.event_id);
+  const id = newId();
 
-  // Generate next display code per event.
-  const { data: existing } = await supabase
-    .from("teams")
-    .select("display_code")
-    .eq("event_id", parsed.data.event_id);
-  const code = nextDisplayCode((existing ?? []).map((t) => t.display_code));
-
-  const { data: team, error } = await supabase
-    .from("teams")
-    .insert({
-      event_id: parsed.data.event_id,
-      name: parsed.data.name,
-      display_code: code,
-      leader_id: user.id,
-    })
-    .select("*")
-    .single();
-
-  if (error || !team) return { ok: false, error: error?.message ?? "Failed to create team" };
-
-  // Add leader as a member too.
-  await supabase.from("team_members").insert({ team_id: team.id, profile_id: user.id });
+  try {
+    await db
+      .prepare(
+        "INSERT INTO teams (id, event_id, name, display_code, leader_id) VALUES (?, ?, ?, ?, ?)",
+      )
+      .bind(id, parsed.data.event_id, parsed.data.name, code, user.id)
+      .run();
+    await db
+      .prepare("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)")
+      .bind(id, user.id)
+      .run();
+  } catch (err) {
+    const msg = (err as Error).message;
+    if (msg.includes("UNIQUE")) return { ok: false, error: "Team name already taken" };
+    return { ok: false, error: msg };
+  }
 
   revalidatePath("/", "layout");
-  return { ok: true, data: team };
+  return { ok: true, data: { id } };
 }
 
 export async function inviteMemberAction(formData: FormData): Promise<ActionResult> {
@@ -57,64 +53,54 @@ export async function inviteMemberAction(formData: FormData): Promise<ActionResu
   });
   if (!parsed.success) return { ok: false, error: "Invalid email" };
 
-  const supabase = await createClient();
-
-  const { data: team } = await supabase
-    .from("teams")
-    .select("id, leader_id, event_id")
-    .eq("id", parsed.data.team_id)
-    .single();
+  const db = await getDB();
+  const team = await db
+    .prepare("SELECT id, leader_id, event_id FROM teams WHERE id = ?")
+    .bind(parsed.data.team_id)
+    .first<{ id: string; leader_id: string; event_id: string }>();
   if (!team) return { ok: false, error: "Team not found" };
-  if (team.leader_id !== user.id && user.profile.role !== "admin") {
+  if (team.leader_id !== user.id && user.role !== "admin") {
     return { ok: false, error: "Only team leaders can invite members" };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", parsed.data.email.toLowerCase())
-    .maybeSingle();
-  if (!profile) return { ok: false, error: "inviteNotFound" };
+  const invitee = await findUserByEmail(parsed.data.email);
+  if (!invitee) return { ok: false, error: "inviteNotFound" };
 
-  const { data: existing } = await supabase
-    .from("team_members")
-    .select("team_id")
-    .eq("team_id", team.id)
-    .eq("profile_id", profile.id)
-    .maybeSingle();
+  const existing = await db
+    .prepare("SELECT team_id FROM team_members WHERE team_id = ? AND user_id = ?")
+    .bind(team.id, invitee.id)
+    .first();
   if (existing) return { ok: false, error: "alreadyMember" };
 
-  const { error } = await supabase
-    .from("team_members")
-    .insert({ team_id: team.id, profile_id: profile.id });
-  if (error) return { ok: false, error: error.message };
+  await db
+    .prepare("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)")
+    .bind(team.id, invitee.id)
+    .run();
 
   revalidatePath("/", "layout");
   return { ok: true };
 }
 
-export async function removeMemberAction(teamId: string, profileId: string): Promise<ActionResult> {
+export async function removeMemberAction(
+  teamId: string,
+  userId: string,
+): Promise<ActionResult> {
   const user = await requireUser();
-  const supabase = await createClient();
-
-  const { data: team } = await supabase
-    .from("teams")
-    .select("leader_id")
-    .eq("id", teamId)
-    .single();
+  const db = await getDB();
+  const team = await db
+    .prepare("SELECT leader_id FROM teams WHERE id = ?")
+    .bind(teamId)
+    .first<{ leader_id: string }>();
   if (!team) return { ok: false, error: "Team not found" };
-  if (team.leader_id !== user.id && user.profile.role !== "admin") {
+  if (team.leader_id !== user.id && user.role !== "admin") {
     return { ok: false, error: "Only the team leader can remove members" };
   }
-  if (profileId === team.leader_id) return { ok: false, error: "Cannot remove team leader" };
+  if (userId === team.leader_id) return { ok: false, error: "Cannot remove team leader" };
 
-  const { error } = await supabase
-    .from("team_members")
-    .delete()
-    .eq("team_id", teamId)
-    .eq("profile_id", profileId);
-  if (error) return { ok: false, error: error.message };
-
+  await db
+    .prepare("DELETE FROM team_members WHERE team_id = ? AND user_id = ?")
+    .bind(teamId, userId)
+    .run();
   revalidatePath("/", "layout");
   return { ok: true };
 }

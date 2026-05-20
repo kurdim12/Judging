@@ -1,21 +1,23 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth";
+import { getDB } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsersManager } from "./users-manager";
 import type { Locale } from "@/i18n";
+import type { User } from "@/types/database";
 
 export default async function AdminUsersPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
+  await requireRole("admin");
   const { locale } = await params;
   const t = await getTranslations("admin");
-  const supabase = await createClient();
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const db = await getDB();
+  const res = await db
+    .prepare("SELECT * FROM users ORDER BY created_at DESC")
+    .all<User>();
 
   return (
     <Card>
@@ -23,7 +25,7 @@ export default async function AdminUsersPage({
         <CardTitle>{t("users")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <UsersManager users={users ?? []} locale={locale} />
+        <UsersManager users={res.results ?? []} locale={locale} />
       </CardContent>
     </Card>
   );

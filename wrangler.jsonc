@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ieee-uop-hackathon-judging",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-01-09",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "judging",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SUBMISSIONS_BUCKET",
+      "bucket_name": "judging-submissions"
+    },
+    {
+      "binding": "AVATARS_BUCKET",
+      "bucket_name": "judging-avatars"
+    }
+  ],
+  "vars": {
+    "SITE_URL": "http://localhost:3000",
+    "EMAIL_FROM": "IEEE UoP Hackathon <hackathon@ieee-uop.org>"
+  }
+  // Secrets configured via `wrangler secret put`:
+  //   AUTH_SECRET            — random 32+ char string for HMAC-signing session cookies
+  //   RESEND_API_KEY         — for magic-link emails
+  //   BOOTSTRAP_ADMIN_EMAIL  — optional: email auto-promoted to admin on first sign-in
+}

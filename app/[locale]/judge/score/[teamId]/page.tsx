@@ -2,7 +2,12 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireRole } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getDB } from "@/lib/db";
+import {
+  getSubmissionForTeam,
+  listCriteriaForEvent,
+  listScoresForJudge,
+} from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScoringPanel } from "@/components/scoring-panel";
@@ -11,50 +16,48 @@ import type { Locale } from "@/i18n";
 export default async function ScorePage({
   params,
 }: {
-  params: Promise<{ locale: Locale; teamId: string }>;
+  params: Promise<{ locale: string; teamId: string }>;
 }) {
   const { locale, teamId } = await params;
   const user = await requireRole("judge");
   const t = await getTranslations("scoring");
   const tJudge = await getTranslations("judge");
-  const supabase = await createClient();
 
-  const { data: team } = await supabase
-    .from("teams")
-    .select("*, events(id, anonymous_judging, name_en, name_ar, phase)")
-    .eq("id", teamId)
-    .single();
+  const db = await getDB();
+  const team = await db
+    .prepare(
+      `SELECT t.*, e.anonymous_judging AS event_anonymous, e.name_en AS event_name_en,
+              e.name_ar AS event_name_ar, e.phase AS event_phase
+       FROM teams t JOIN events e ON e.id = t.event_id WHERE t.id = ?`,
+    )
+    .bind(teamId)
+    .first<{
+      id: string;
+      event_id: string;
+      name: string;
+      display_code: string;
+      leader_id: string;
+      created_at: number;
+      event_anonymous: number;
+      event_name_en: string;
+      event_name_ar: string;
+      event_phase: string;
+    }>();
   if (!team) notFound();
 
-  // Conflict gate
-  const { data: conflict } = await supabase
-    .from("conflicts_of_interest")
-    .select("judge_id")
-    .eq("judge_id", user.id)
-    .eq("team_id", teamId)
-    .maybeSingle();
+  const conflict = await db
+    .prepare(
+      "SELECT 1 FROM conflicts_of_interest WHERE judge_id = ? AND team_id = ?",
+    )
+    .bind(user.id, teamId)
+    .first();
   if (conflict) redirect(`/${locale}/judge`);
 
-  const { data: submission } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("team_id", teamId)
-    .eq("event_id", team.event_id)
-    .maybeSingle();
+  const submission = await getSubmissionForTeam(teamId, team.event_id);
+  const criteria = await listCriteriaForEvent(team.event_id);
+  const myScores = await listScoresForJudge(user.id, teamId);
 
-  const { data: criteria } = await supabase
-    .from("criteria")
-    .select("*")
-    .eq("event_id", team.event_id)
-    .order("display_order");
-
-  const { data: myScores } = await supabase
-    .from("scores")
-    .select("*")
-    .eq("judge_id", user.id)
-    .eq("team_id", teamId);
-
-  const anonymous = team.events?.anonymous_judging;
+  const anonymous = team.event_anonymous === 1;
   const heading = anonymous ? team.display_code : `${team.display_code} · ${team.name}`;
 
   return (
@@ -73,7 +76,7 @@ export default async function ScorePage({
 
       <div>
         <p className="text-xs uppercase tracking-wide text-stone-500">
-          {locale === "ar" ? team.events?.name_ar : team.events?.name_en}
+          {locale === "ar" ? team.event_name_ar : team.event_name_en}
         </p>
         <h1 className="mt-1 text-2xl font-bold text-stone-900">{heading}</h1>
       </div>
@@ -95,13 +98,13 @@ export default async function ScorePage({
                   label={locale === "ar" ? "ملخص الحل" : "Solution"}
                   value={submission.solution_summary}
                 />
-                {submission.tech_stack && submission.tech_stack.length > 0 && (
+                {submission.tech_stack.length > 0 && (
                   <div>
                     <p className="text-xs uppercase text-stone-500 mb-1">
                       {locale === "ar" ? "التقنيات" : "Tech"}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
-                      {submission.tech_stack.map((tech: string) => (
+                      {submission.tech_stack.map((tech) => (
                         <Badge key={tech} variant="primary">
                           {tech}
                         </Badge>
@@ -115,6 +118,27 @@ export default async function ScorePage({
                   <LinkRow label="Video" url={submission.video_url} />
                   <LinkRow label="Slides" url={submission.slides_url} />
                 </div>
+                {submission.attachments.length > 0 && (
+                  <div>
+                    <p className="text-xs uppercase text-stone-500 mb-1">
+                      {locale === "ar" ? "المرفقات" : "Attachments"}
+                    </p>
+                    <ul className="space-y-1 text-xs">
+                      {submission.attachments.map((a) => (
+                        <li key={a.path}>
+                          <a
+                            href={`/${locale}/files/${encodeURIComponent(a.path)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-ieee-600 hover:underline"
+                          >
+                            {a.name}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-stone-500">—</p>
@@ -126,8 +150,8 @@ export default async function ScorePage({
           <ScoringPanel
             locale={locale}
             teamId={teamId}
-            criteria={criteria ?? []}
-            initialScores={myScores ?? []}
+            criteria={criteria}
+            initialScores={myScores}
           />
         </div>
       </div>

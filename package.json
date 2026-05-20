@@ -7,23 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
+    "db:migrate:local": "wrangler d1 migrations apply judging --local",
+    "db:migrate:remote": "wrangler d1 migrations apply judging --remote",
+    "db:seed:local": "wrangler d1 execute judging --local --file=./db/migrations/0002_seed.sql",
+    "db:seed:remote": "wrangler d1 execute judging --remote --file=./db/migrations/0002_seed.sql"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
-    "@radix-ui/react-dialog": "^1.1.4",
-    "@radix-ui/react-label": "^2.1.1",
-    "@radix-ui/react-select": "^2.1.4",
-    "@radix-ui/react-slot": "^1.1.1",
-    "@radix-ui/react-tabs": "^1.1.2",
-    "@radix-ui/react-tooltip": "^1.1.6",
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.10",
+    "@opennextjs/cloudflare": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",
-    "next": "15.1.4",
+    "next": "^15.5.18",
     "next-intl": "^3.26.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -34,15 +34,17 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "eslint": "^9.18.0",
-    "eslint-config-next": "15.1.4",
+    "eslint-config-next": "^15.5.18",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "wrangler": "^4.86.0"
   },
   "packageManager": "pnpm@10.33.0"
 }

@@ -8,12 +8,12 @@ import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { changeUserRoleAction } from "@/lib/actions/admin";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
-import type { Profile, UserRole } from "@/types/database";
+import type { User, UserRole } from "@/types/database";
 import type { Locale } from "@/i18n";
 
 const roles: UserRole[] = ["admin", "judge", "team_leader", "team_member"];
 
-export function UsersManager({ users, locale }: { users: Profile[]; locale: Locale }) {
+export function UsersManager({ users, locale }: { users: User[]; locale: string }) {
   const tErr = useTranslations("errors");
   const router = useRouter();
   const [pending, start] = useTransition();

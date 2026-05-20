@@ -28,7 +28,7 @@ export function TeamMembersManager({
   currentUserId: string;
   isLeader: boolean;
   members: Member[];
-  locale: Locale;
+  locale: string;
 }) {
   const t = useTranslations("team");
   const tErr = useTranslations("errors");

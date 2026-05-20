@@ -10,14 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { createClient } from "@/lib/supabase/client";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import type { Criterion, LeaderboardRow, Score } from "@/types/database";
 import type { Locale } from "@/i18n";
-
-interface ScoreWithJudge extends Score {
-  profiles?: { full_name_en: string | null; full_name_ar: string | null; email: string } | null;
-}
 
 interface JudgeProfile {
   id: string;
@@ -25,6 +20,8 @@ interface JudgeProfile {
   full_name_ar: string | null;
   email: string;
 }
+
+const POLL_MS = 3000;
 
 export function LiveLeaderboard({
   eventId,
@@ -39,9 +36,9 @@ export function LiveLeaderboard({
   eventId: string;
   initial: LeaderboardRow[];
   anonymous: boolean;
-  locale: Locale;
+  locale: string;
   criteria: Criterion[];
-  scores: ScoreWithJudge[];
+  scores: Score[];
   judges: JudgeProfile[];
   labels: {
     rank: string;
@@ -55,23 +52,21 @@ export function LiveLeaderboard({
   const [rows, setRows] = useState<LeaderboardRow[]>(initial);
 
   useEffect(() => {
-    const sb = createClient();
-    const channel = sb
-      .channel("scores-leaderboard")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "scores" },
-        async () => {
-          const { data } = await sb
-            .from("leaderboard")
-            .select("*")
-            .eq("event_id", eventId);
-          if (data) setRows(data as LeaderboardRow[]);
-        },
-      )
-      .subscribe();
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/leaderboard/${eventId}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { rows: LeaderboardRow[] };
+        if (!cancelled && Array.isArray(data.rows)) setRows(data.rows);
+      } catch {
+        // network blip — ignore
+      }
+    };
+    const interval = setInterval(tick, POLL_MS);
     return () => {
-      sb.removeChannel(channel);
+      cancelled = true;
+      clearInterval(interval);
     };
   }, [eventId]);
 
@@ -87,7 +82,6 @@ export function LiveLeaderboard({
     [rows, anonymous],
   );
 
-  // Variance per team
   const variance = useMemo(() => {
     const byTeam = new Map<string, number[]>();
     for (const s of scores) {

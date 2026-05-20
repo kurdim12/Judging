@@ -5,11 +5,17 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import type { Locale } from "@/i18n";
 
-export async function SiteHeader({ locale }: { locale: Locale }) {
+export async function SiteHeader({ locale }: { locale: string }) {
   const t = await getTranslations("nav");
   const tBrand = await getTranslations("brand");
-  const user = await getUser();
-  const role = user?.profile.role;
+
+  let user = null;
+  try {
+    user = await getUser();
+  } catch {
+    // env not configured yet — render as guest.
+  }
+  const role = user?.role;
 
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur">

@@ -14,7 +14,7 @@ import { saveSubmissionAction } from "@/lib/actions/submissions";
 import { FileUploader } from "@/components/file-uploader";
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n";
-import type { Submission, SubmissionAttachment } from "@/types/database";
+import type { Submission } from "@/types/database";
 
 type FormValues = z.infer<typeof submissionSchema>;
 
@@ -26,7 +26,7 @@ export function SubmissionForm({
   locked,
   isLeader,
 }: {
-  locale: Locale;
+  locale: string;
   teamId: string;
   eventId: string;
   submission: Submission | null;
@@ -229,9 +229,7 @@ export function SubmissionForm({
         <FileUploader
           locale={locale}
           submissionId={submission.id}
-          teamId={teamId}
-          eventId={eventId}
-          attachments={(submission.attachments ?? []) as SubmissionAttachment[]}
+          attachments={submission.attachments ?? []}
           locked={locked}
         />
       )}

@@ -24,7 +24,7 @@ export function CriteriaManager({
 }: {
   events: EventOpt[];
   criteria: Criterion[];
-  locale: Locale;
+  locale: string;
 }) {
   const t = useTranslations("admin");
   const tErr = useTranslations("errors");

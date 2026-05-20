@@ -7,7 +7,7 @@ import Link from "next/link";
 export default async function LoginPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations("auth");

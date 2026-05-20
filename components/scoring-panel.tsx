@@ -24,7 +24,7 @@ export function ScoringPanel({
   criteria,
   initialScores,
 }: {
-  locale: Locale;
+  locale: string;
   teamId: string;
   criteria: Criterion[];
   initialScores: Score[];

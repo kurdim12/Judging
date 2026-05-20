@@ -1,51 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { requestMagicLink } from "@/lib/actions/auth";
 import type { Locale } from "@/i18n";
 
 export function LoginForm({
   locale,
   mode,
 }: {
-  locale: Locale;
+  locale: string;
   mode: "signin" | "signup";
 }) {
   const t = useTranslations("auth");
   const tErr = useTranslations("errors");
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
-  const [pending, setPending] = useState(false);
+  const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function submit(e: React.FormEvent) {
     e.preventDefault();
-    setPending(true);
-    try {
-      const supabase = createClient();
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ??
-        (typeof window !== "undefined" ? window.location.origin : "");
-
-      const { error } = await supabase.auth.signInWithOtp({
+    start(async () => {
+      const result = await requestMagicLink({
         email,
-        options: {
-          emailRedirectTo: `${siteUrl}/${locale}/callback`,
-          data: mode === "signup" && fullName ? { full_name: fullName } : undefined,
-        },
+        full_name: mode === "signup" ? fullName : undefined,
+        locale: locale === "ar" ? "ar" : "en",
       });
-      if (error) throw error;
+      if (!result.ok) {
+        toast.error(result.error ?? tErr("generic"));
+        return;
+      }
       setSent(true);
-      toast.success(t("magicLinkSent"));
-    } catch (err) {
-      toast.error((err as Error).message || tErr("generic"));
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   if (sent) {
@@ -57,7 +47,7 @@ export function LoginForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={submit} className="space-y-4">
       {mode === "signup" && (
         <div>
           <Label htmlFor="fullName">{t("fullName")}</Label>

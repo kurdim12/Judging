@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n";
 export default async function SignupPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations("auth");

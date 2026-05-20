@@ -25,7 +25,7 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir}>
       <body className="min-h-dvh bg-stone-50 text-stone-800">
         <NextIntlClientProvider messages={messages} locale={locale}>
-          <SiteHeader locale={locale as Locale} />
+          <SiteHeader locale={locale} />
           <main className="mx-auto max-w-6xl px-4 py-8 md:py-12">{children}</main>
           <Toaster richColors position={dir === "rtl" ? "top-left" : "top-right"} />
           <footer className="border-t border-stone-200 mt-16 py-6 text-center text-xs text-stone-500">

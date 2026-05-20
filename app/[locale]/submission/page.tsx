@@ -1,57 +1,34 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getDB } from "@/lib/db";
+import { getSubmissionForTeam, getTeamForUser } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubmissionForm } from "@/components/submission-form";
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n";
-import type { Submission } from "@/types/database";
 
 export default async function SubmissionPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const user = await requireUser();
   const t = await getTranslations("submission");
-  const supabase = await createClient();
 
-  // Determine which team the user belongs to.
-  const { data: leadTeam } = await supabase
-    .from("teams")
-    .select("*, events(id, phase, name_en, name_ar)")
-    .eq("leader_id", user.id)
-    .maybeSingle();
-
-  let team: typeof leadTeam | null = leadTeam;
-  if (!team) {
-    const { data: memberLink } = await supabase
-      .from("team_members")
-      .select("team_id")
-      .eq("profile_id", user.id)
-      .maybeSingle();
-    if (memberLink) {
-      const { data: t2 } = await supabase
-        .from("teams")
-        .select("*, events(id, phase, name_en, name_ar)")
-        .eq("id", memberLink.team_id)
-        .single();
-      team = t2 ?? null;
-    }
-  }
-
+  const team = await getTeamForUser(user.id);
   if (!team) redirect(`/${locale}/team`);
 
-  const { data: submission } = await supabase
-    .from("submissions")
-    .select("*")
-    .eq("team_id", team.id)
-    .eq("event_id", team.event_id)
-    .maybeSingle();
+  const db = await getDB();
+  const event = await db
+    .prepare("SELECT id, phase, name_en, name_ar FROM events WHERE id = ?")
+    .bind(team.event_id)
+    .first<{ id: string; phase: string; name_en: string; name_ar: string }>();
 
-  const phase = team.events?.phase ?? "setup";
+  const submission = await getSubmissionForTeam(team.id, team.event_id);
+
+  const phase = event?.phase ?? "setup";
   const locked =
     submission?.status === "submitted" ||
     submission?.status === "disqualified" ||
@@ -76,7 +53,7 @@ export default async function SubmissionPage({
           {(!submission || submission.status === "draft") && (
             <Badge variant="muted">{t("draft")}</Badge>
           )}
-          {locked && (
+          {locked && submission?.status !== "submitted" && (
             <Badge variant="warning">{t("lockedAfterDeadline")}</Badge>
           )}
         </div>
@@ -91,7 +68,7 @@ export default async function SubmissionPage({
             locale={locale}
             teamId={team.id}
             eventId={team.event_id}
-            submission={submission as Submission | null}
+            submission={submission}
             locked={locked}
             isLeader={isLeader}
           />

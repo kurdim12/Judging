@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { computeLeaderboard, listEvents } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import type { Locale } from "@/i18n";
@@ -7,18 +7,18 @@ import type { Locale } from "@/i18n";
 export default async function PublicLeaderboardPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations("leaderboard");
-  const supabase = await createClient();
 
-  const { data: events } = await supabase
-    .from("events")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (!events || events.length === 0) {
+  let events: Awaited<ReturnType<typeof listEvents>> = [];
+  try {
+    events = await listEvents();
+  } catch {
+    // env not configured
+  }
+  if (events.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -30,7 +30,7 @@ export default async function PublicLeaderboardPage({
   }
 
   const event = events[0];
-  const allowed = event.show_public_leaderboard && event.phase === "results_published";
+  const allowed = !!event.show_public_leaderboard && event.phase === "results_published";
 
   if (!allowed) {
     return (
@@ -45,10 +45,7 @@ export default async function PublicLeaderboardPage({
     );
   }
 
-  const { data: rows } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .eq("event_id", event.id);
+  const rows = await computeLeaderboard(event.id);
 
   return (
     <div className="space-y-5">
@@ -57,8 +54,8 @@ export default async function PublicLeaderboardPage({
         <p className="mt-1 text-sm text-stone-500">{t("normalizationNote")}</p>
       </div>
       <LeaderboardTable
-        rows={rows ?? []}
-        anonymous={event.anonymous_judging}
+        rows={rows}
+        anonymous={!!event.anonymous_judging}
         locale={locale}
         labels={{
           rank: t("rank"),

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { listEvents } from "@/lib/queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n";
@@ -8,18 +8,19 @@ import type { Locale } from "@/i18n";
 export default async function HomePage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const t = await getTranslations("event");
   const tNav = await getTranslations("nav");
   const tBrand = await getTranslations("brand");
 
-  const supabase = await createClient();
-  const { data: events } = await supabase
-    .from("events")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let events: Awaited<ReturnType<typeof listEvents>> = [];
+  try {
+    events = await listEvents();
+  } catch {
+    // DB not configured locally — leave empty.
+  }
 
   return (
     <div className="space-y-10">
@@ -54,7 +55,7 @@ export default async function HomePage({
           {locale === "ar" ? "الفعاليات" : "Events"}
         </h2>
 
-        {!events || events.length === 0 ? (
+        {events.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center text-stone-500">
               {locale === "ar"
@@ -80,10 +81,10 @@ export default async function HomePage({
                     {ev.submission_deadline && (
                       <li>
                         {t("deadlineSubmission")}:{" "}
-                        {new Date(ev.submission_deadline).toLocaleString(locale)}
+                        {new Date(ev.submission_deadline * 1000).toLocaleString(locale)}
                       </li>
                     )}
-                    {ev.anonymous_judging && (
+                    {!!ev.anonymous_judging && (
                       <li className="text-petra-600 font-medium">
                         ★ {t("anonymousJudging")}
                       </li>

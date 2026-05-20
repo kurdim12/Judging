@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import { addAttachmentAction, removeAttachmentAction } from "@/lib/actions/submissions";
+import {
+  removeAttachmentAction,
+  uploadAttachmentAction,
+} from "@/lib/actions/submissions";
 import type { Locale } from "@/i18n";
 import type { SubmissionAttachment } from "@/types/database";
 
@@ -17,15 +19,11 @@ const ALLOWED = /\.(pdf|zip|pptx|png|jpe?g|mp4)$/i;
 export function FileUploader({
   locale,
   submissionId,
-  teamId,
-  eventId,
   attachments,
   locked,
 }: {
-  locale: Locale;
+  locale: string;
   submissionId: string;
-  teamId: string;
-  eventId: string;
   attachments: SubmissionAttachment[];
   locked: boolean;
 }) {
@@ -41,7 +39,6 @@ export function FileUploader({
     const remaining = MAX_FILES - attachments.length;
     if (remaining <= 0) return toast.error("Max 5 files");
 
-    const supabase = createClient();
     for (const file of Array.from(files).slice(0, remaining)) {
       if (file.size > MAX_BYTES) {
         toast.error(`${file.name}: > 50 MB`);
@@ -51,22 +48,10 @@ export function FileUploader({
         toast.error(`${file.name}: unsupported type`);
         continue;
       }
-      const safeName = file.name.replace(/[^a-z0-9._-]/gi, "_");
-      const path = `${eventId}/${teamId}/${Date.now()}-${safeName}`;
-      const { error } = await supabase.storage.from("submissions").upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-      if (error) {
-        toast.error(`${file.name}: ${error.message}`);
-        continue;
-      }
-      const result = await addAttachmentAction(submissionId, {
-        path,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
+      const fd = new FormData();
+      fd.append("submission_id", submissionId);
+      fd.append("file", file);
+      const result = await uploadAttachmentAction(fd);
       if (!result.ok) {
         toast.error(result.error ?? tErr("uploadFailed"));
         continue;
@@ -87,12 +72,6 @@ export function FileUploader({
     });
   }
 
-  async function openSigned(path: string) {
-    const supabase = createClient();
-    const { data } = await supabase.storage.from("submissions").createSignedUrl(path, 60 * 10);
-    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
-  }
-
   return (
     <div>
       <p className="text-sm font-medium text-stone-700 mb-2">{t("attachments")}</p>
@@ -103,13 +82,14 @@ export function FileUploader({
               key={a.path}
               className="flex items-center justify-between rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-sm"
             >
-              <button
-                type="button"
-                onClick={() => openSigned(a.path)}
+              <a
+                href={`/${locale}/files/${encodeURIComponent(a.path)}`}
+                target="_blank"
+                rel="noreferrer"
                 className="text-ieee-600 hover:underline truncate"
               >
                 {a.name}
-              </button>
+              </a>
               <div className="flex items-center gap-2 text-xs text-stone-500">
                 <span>{(a.size / 1024 / 1024).toFixed(1)} MB</span>
                 {!locked && (

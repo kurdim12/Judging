@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { getDB } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateTeamForm } from "./create-team-form";
 import type { Locale } from "@/i18n";
@@ -9,20 +9,21 @@ import type { Locale } from "@/i18n";
 export default async function CreateTeamPage({
   params,
 }: {
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
   const user = await requireUser();
-  if (user.profile.role !== "team_leader" && user.profile.role !== "admin") {
+  if (user.role !== "team_leader" && user.role !== "admin") {
     redirect(`/${locale}/team`);
   }
 
   const t = await getTranslations("team");
-  const supabase = await createClient();
-  const { data: events } = await supabase
-    .from("events")
-    .select("id, name_en, name_ar, phase")
-    .in("phase", ["setup", "submissions_open"]);
+  const db = await getDB();
+  const res = await db
+    .prepare(
+      "SELECT id, name_en, name_ar, phase FROM events WHERE phase IN ('setup','submissions_open')",
+    )
+    .all<{ id: string; name_en: string; name_ar: string; phase: string }>();
 
   return (
     <div className="mx-auto max-w-xl">
@@ -38,7 +39,7 @@ export default async function CreateTeamPage({
         <CardContent>
           <CreateTeamForm
             locale={locale}
-            events={(events ?? []).map((e) => ({
+            events={(res.results ?? []).map((e) => ({
               id: e.id,
               name: locale === "ar" ? e.name_ar : e.name_en,
             }))}

@@ -14,7 +14,7 @@ export function CreateTeamForm({
   locale,
   events,
 }: {
-  locale: Locale;
+  locale: string;
   events: Array<{ id: string; name: string }>;
 }) {
   const t = useTranslations("team");
