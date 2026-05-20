@@ -30,7 +30,7 @@
     }
   ],
   "vars": {
-    "SITE_URL": "http://localhost:3000",
+    "SITE_URL": "https://ieee-uop-hackathon-judging.abdalrhmankurdi12.workers.dev",
     "EMAIL_FROM": "IEEE UoP Hackathon <hackathon@ieee-uop.org>"
   }
   // Secrets configured via `wrangler secret put`:
