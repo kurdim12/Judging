@@ -82,6 +82,9 @@ export async function saveSubmissionAction(input: SubmissionInput) {
   if (event.phase !== "submissions_open" && event.phase !== "setup") {
     return { ok: false, error: "Submissions are closed" };
   }
+  if (event.submission_deadline && now() > event.submission_deadline) {
+    return { ok: false, error: "Submission deadline has passed" };
+  }
 
   const db = await getDB();
   const existing = await getSubmissionForTeam(input.team_id, input.event_id);

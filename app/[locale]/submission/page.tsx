@@ -22,18 +22,30 @@ export default async function SubmissionPage({
 
   const db = await getDB();
   const event = await db
-    .prepare("SELECT id, phase, name_en, name_ar FROM events WHERE id = ?")
+    .prepare(
+      "SELECT id, phase, name_en, name_ar, submission_deadline FROM events WHERE id = ?",
+    )
     .bind(team.event_id)
-    .first<{ id: string; phase: string; name_en: string; name_ar: string }>();
+    .first<{
+      id: string;
+      phase: string;
+      name_en: string;
+      name_ar: string;
+      submission_deadline: number | null;
+    }>();
 
   const submission = await getSubmissionForTeam(team.id, team.event_id);
 
   const phase = event?.phase ?? "setup";
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const deadlinePassed =
+    !!event?.submission_deadline && nowSeconds > event.submission_deadline;
   const locked =
     submission?.status === "submitted" ||
     submission?.status === "disqualified" ||
     submission?.status === "finalist" ||
-    (phase !== "submissions_open" && phase !== "setup");
+    (phase !== "submissions_open" && phase !== "setup") ||
+    deadlinePassed;
 
   const isLeader = team.leader_id === user.id;
 
@@ -59,6 +71,14 @@ export default async function SubmissionPage({
         </div>
       </div>
 
+      {event?.submission_deadline && (
+        <DeadlineBanner
+          deadline={event.submission_deadline}
+          passed={deadlinePassed}
+          locale={locale}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>{t("title")}</CardTitle>
@@ -74,6 +94,39 @@ export default async function SubmissionPage({
           />
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DeadlineBanner({
+  deadline,
+  passed,
+  locale,
+}: {
+  deadline: number;
+  passed: boolean;
+  locale: string;
+}) {
+  const date = new Date(deadline * 1000);
+  const display = date.toLocaleString(locale === "ar" ? "ar-JO" : "en-GB", {
+    timeZone: "Asia/Amman",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  if (passed) {
+    return (
+      <div className="rounded-md border border-petra-200 bg-petra-50 px-4 py-3 text-sm text-petra-800">
+        {locale === "ar"
+          ? `🔒 أُغلق التسليم في ${display}`
+          : `🔒 Submissions closed at ${display}`}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-ieee-200 bg-ieee-50 px-4 py-3 text-sm text-ieee-800">
+      {locale === "ar"
+        ? `⏰ آخر موعد للتسليم: ${display}`
+        : `⏰ Submission deadline: ${display}`}
     </div>
   );
 }
